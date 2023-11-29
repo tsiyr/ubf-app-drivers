@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, FlatList, TouchableOpacity, Modal, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, Image, FlatList, TouchableOpacity, Modal, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { ScrollView, TextInput } from 'react-native-gesture-handler';
 import { fetchRentals } from '../utils/services';
 import { useAuth } from '../auth';
@@ -20,19 +20,30 @@ const url="https://urbanfleet.biz/";
     //const [isLoading, setIsLoading] = useState(true);
     const [rentals, setRentals] = useState(false);
 
+    const [total, setTotalEarned] = useState(false);
+
 
       useEffect(() => {
 
-        fetchRentals(user.login).then((res) => {    
+        fetchRentals(user.user_id).then((res) => {   
     
           if(res){
+
+            console.log(res)
+
+            const total = res.reduce((sum, trip) => {
+              if (trip.dispute_status.length < 4) {
+                return sum + trip.fee;
+              }
+              return sum;
+            }, 0);
             
-           // console.log(res)
+            setTotalEarned(total);
             setRentals(res)
     
           }
     
-            //console.log(res)
+          
         
           });
     
@@ -45,25 +56,23 @@ const url="https://urbanfleet.biz/";
         <Image source={{ uri: url+item.image }} style={styles.vehicleImage} />
         <Text style={{marginBottom:12}}>From {item.from_loc} to {item.to_loc} </Text>
         <Text>Booking ID: {item.bookingid}</Text>
-        <Text style={{marginBottom:12, fontWeight:800, fontSize: 24}}>NGN: {parseInt(item.fee).toLocaleString()}</Text>
-        <Text>Status: not started</Text>
+        <Text style={{marginBottom:12, fontWeight:800, fontSize: 28}}>NGN: {parseInt(item.fee).toLocaleString()}</Text>
+        {item.dispute_status.length < 4 && <Text>Status: {item.phase}</Text>}
+        {item.dispute_status.length > 4 && <Text style={{fontWeight:800, color:'red'}}>Status: Disputed</Text>}
         <ScrollView
           horizontal
           style={styles.ctaButtonsContainer}
           contentContainerStyle={styles.ctaButtonsContent}
         >
+        
+        {item.phase !== 'completed' &&
+
           <TouchableOpacity style={styles.ctaButton} onPress={() => setModalVisible(true)}>
-            <Text style={styles.ctaButtonText}>Driver Info</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Rate Trip</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>View Receipt</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Dispute</Text>
-          </TouchableOpacity>
+            <Text style={styles.ctaButtonText}>Trip Info</Text>
+          </TouchableOpacity>}
+
+
+
           {/* Add more CTAs as needed */}
         </ScrollView>
       </View>
@@ -87,6 +96,16 @@ const url="https://urbanfleet.biz/";
             <NoVehiclesFoundView />
           )
           }
+         {rentals.length > 0 && total > 0 &&
+          
+          ( 
+          <View style={{marginBottom: 18}}>
+          <Text >My Earnings</Text>
+          <Text style={{fontSize:28, fontWeight:800}}>NGN {parseInt(total).toLocaleString()}</Text>
+          </View>
+
+        )
+      }
         {rentals.length > 0 &&
           
           ( 
@@ -137,6 +156,7 @@ const url="https://urbanfleet.biz/";
       height: 200,
       resizeMode: 'cover',
       marginBottom: 10,
+      borderRadius: 20
     },
     ctaButtonsContainer: {
       flexDirection: 'row',

@@ -244,9 +244,9 @@ const sendRentData = async (rentData) => {
   }
 };
 
-const fetchRentals = (user_email) => {
+const fetchRentals = (user_id) => {
   return FetchHandler({
-    url: "api_fetch_rentals.php?email="+user_email, 
+    url: "api_fetch_rental_req.php?id="+user_id, 
     method: "GET",
   });
 };
