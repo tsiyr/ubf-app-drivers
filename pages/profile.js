@@ -51,19 +51,34 @@ const UserProfile = () => {
       </View>
 
       <View style={styles.menuContainer}>
-        <TouchableOpacity style={styles.menuItem} onPress={()=> navigation.navigate('Vehicles')}>
-          <Text style={styles.menuItemText}>Vehicles</Text>
-        </TouchableOpacity>
+    
 
         <TouchableOpacity style={styles.menuItem} onPress={()=> navigation.navigate('Rentals')}>
           <Text style={styles.menuItemText}>Rentals</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.menuItem} onPress={()=> navigation.navigate('DSTrips')}>
+          <Text style={styles.menuItemText}>Destination Trips</Text>
         </TouchableOpacity>
         
       </View>
 
       <View style={styles.menuContainer}>
+
+      <TouchableOpacity style={styles.menuItem} onPress={()=> navigation.navigate('Vehicles')}>
+          <Text style={styles.menuItemText}>Vehicles</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.menuItem} onPress={handleMyRentalsPress}>
           <Text style={styles.menuItemText}>Earnings</Text>
+        </TouchableOpacity>
+        
+      </View>
+
+      <View style={styles.menuContainer}>
+
+         <TouchableOpacity style={styles.menuItem} onPress={()=> navigation.navigate('QRCodeScanner')}>
+          <Text style={styles.menuItemText}>Scan QRCode</Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.menuItem} onPress={handleMyRentalsPress}>

@@ -1,4 +1,5 @@
 {
+
   "expo": {
     "name": "urbanFleet",
     "slug": "urbanFleet",
@@ -14,11 +15,16 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+
     "ios": {
+      "infoPlist": {
+        "NSCameraUsageDescription": "Allow access to the camera for scanning QR codes."
+      },
       "supportsTablet": true,
       "bundleIdentifier": "com.urbanfleet.app"
     },
     "android": {
+      "permissions": ["CAMERA"],
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"

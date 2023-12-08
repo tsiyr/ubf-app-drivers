@@ -8,6 +8,8 @@ import Auth from './pages/login';
 import { useAuth } from './auth';
 import VehiclesPage from './pages/vehicles';
 import RentalsPage from './pages/rentals';
+import DSTrips from './pages/ds_trips';
+import QRCodeScanner from './pages/scan_code';
 
 const Stack = createStackNavigator();
 
@@ -51,6 +53,22 @@ const Navigation = () => {
             component={RentalsPage}
             options={({ navigation }) => ({
               header: () => <CustomHeader title='Rentals' navigation={navigation} />,
+            })}
+          />
+      
+      <Stack.Screen
+            name="DSTrips"
+            component={DSTrips}
+            options={({ navigation }) => ({
+              header: () => <CustomHeader title='Destination Trips' navigation={navigation} />,
+            })}
+          />
+
+    <Stack.Screen
+            name="QRCodeScanner"
+            component={QRCodeScanner}
+            options={({ navigation }) => ({
+              header: () => <CustomHeader title='Ticket Code Scanner' navigation={navigation} />,
             })}
           />
       

@@ -251,6 +251,21 @@ const fetchRentals = (user_id) => {
   });
 };
 
+const fetchDSTrips = (user_id) => {
+  return FetchHandler({
+    url: "ds-trips-api.php?user_id="+user_id, 
+    method: "GET",
+  });
+};
+
+
+const fetchTicketData = (user_id, tk_id) => {
+  return FetchHandler({
+    url: "includes/verify_code_api.php?user_id="+user_id+"&tk_id="+tk_id, 
+    method: "GET",
+  });
+};
+
 const fetchUserVehicles = (user_id) => {
   return FetchHandler({
     url: "api_fetch_vendor_vehicles.php?id="+user_id, 
@@ -378,6 +393,8 @@ module.exports = {
   fetchVehicle,
   sendRentData,
   fetchRentals,
+  fetchDSTrips,
+  fetchTicketData,
   getUserData,
   getUserDebits,
   getUserCredits,
