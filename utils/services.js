@@ -4,28 +4,44 @@ const backendUrl = "https://urbanfleet.biz/";
 
 
 const FetchHandler = (prop) => {
-
   if (prop.method === "POST") {
     return fetch(backendUrl + prop.url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        token: ""//cookieParser("token"),
+        token: "" //cookieParser("token"),
       },
       body: prop.data,
-    }).then((res) => {
-      return res.json();
-    });
+    })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .catch((error) => {
+        // Handle the error here without crashing
+        console.error("Error in POST request:", error.message);
+        return { status: "error", message: error.message };
+      });
   }
 
   if (prop.method === "GET") {
-
-    return fetch(backendUrl + prop.url, {
-    
-    }).then((res) => {
-     // console.log(res)
-      return res.json();
-    });
+    return fetch(backendUrl + prop.url)
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! Status: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data) => {
+        return data;
+      })
+      .catch((error) => {
+        // Handle the error here without crashing
+        console.error("Error in GET request:", error.message);
+        return { status: "error", message: error.message };
+      });
   }
 };
 
@@ -274,13 +290,21 @@ const fetchUserVehicles = (user_id) => {
 };
 
 
+
+const fetchUserVehiclesData = (user_id) => {
+  return FetchHandler({
+    url: "api_fetch_vendor_vehicles_data.php?user_id=37", 
+    method: "GET",
+  });
+};
+
 const getUserData = (user_id) => {
   return FetchHandler({
     url: "admin/user_data/"+user_id, 
     method: "GET",
   });
 };
-
+ 
 const getUserDebits = (user_id) => {
   return FetchHandler({
     url: "admin/user_debits/"+user_id, 
@@ -390,6 +414,7 @@ module.exports = {
   getPayments,
   fetchVehicles,
   fetchUserVehicles,
+  fetchUserVehiclesData,
   fetchVehicle,
   sendRentData,
   fetchRentals,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, FlatList, TouchableOpacity, Modal, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { ScrollView, TextInput } from 'react-native-gesture-handler';
 import { fetchDSTrips } from '../utils/services';
+import DSTrip from './ds_trip';
 import { useAuth } from '../auth';
 
 import NoVehiclesFoundView from '../components/no_rentals_found';
@@ -16,7 +17,7 @@ const url="https://urbanfleet.biz/";
     const { user, currency } = useAuth();
 
     const [modalVisible, setModalVisible] = useState(false);
-    //const [isLoading, setIsLoading] = useState(true);
+    ;
     const [rentals, setRentals] = useState(false);
 
     const [total, setTotalEarned] = useState(false);
@@ -28,7 +29,7 @@ const url="https://urbanfleet.biz/";
     
           if(res){
 
-           console.log(res)
+           //console.log(res)
 
             const total = res.reduce((sum, trip) => {
              
@@ -50,6 +51,7 @@ const url="https://urbanfleet.biz/";
     
    
     const renderRentalItem = ({ item }) => (
+
       <View style={styles.rentalItemContainer}>
 
         <Text style={{marginBottom:12}}>Trip Date: {item.trip_date}</Text>
@@ -99,6 +101,11 @@ const url="https://urbanfleet.biz/";
           <View style={{marginBottom: 18}}>
           <Text >My Earnings</Text>
           <Text style={{fontSize:28, fontWeight:800}}>NGN {parseInt(total).toLocaleString()}</Text>
+         
+          <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <Text style={{marginVertical: 7, width: 120, fontSize:15, color: 'green', borderColor: 'green',borderRadius: 12, borderWidth: 2, padding:4, textAlign:'center'}}>New DS Trip</Text>
+          </TouchableOpacity>
+
           </View>
 
         )
@@ -114,6 +121,9 @@ const url="https://urbanfleet.biz/";
 
         )
       }
+
+
+          <DSTrip showModal={modalVisible} setModal ={setModalVisible} />  
   
         {/* Driver Info Modal */}
         <Modal
