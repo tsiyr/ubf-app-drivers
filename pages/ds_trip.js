@@ -3,12 +3,16 @@ import {  View, StyleSheet, ScrollView, Alert, Modal,  Text, ActivityIndicator, 
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
 import { Picker } from '@react-native-picker/picker';
+   
+import * as Localization from 'expo-localization';
 
 import MapView, { Marker, Polyline } from "react-native-maps";
 
-import {sendRentData, fetchUserVehiclesData } from "../utils/services";
+import {sendRentData, fetchUserVehiclesData, calc_time_btw } from "../utils/services";
 import Icon from 'react-native-vector-icons/FontAwesome';
 import moment from 'moment';
+import 'moment-timezone';
+
 import { useNavigation } from '@react-navigation/native'; 
 
 import { useAuth } from '../auth';
@@ -30,7 +34,9 @@ const map_key = 'AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI';
   const [endDate, setEndDate] = useState(new Date());
   const [startTime, setStartTime] = useState(new Date());
 
-  const [startDate_, setStartDate_] = useState(new Date());
+  const [startDate_, setStartDate_] = useState('0000-00-00');
+  const [startTime_, setStartTime_] = useState('00:00:00');
+  
   const [endDate_, setEndDate_] = useState(new Date());
 
   const [startDateTime, setStartDateTime] = useState("");
@@ -43,6 +49,7 @@ const map_key = 'AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI';
 
   const [showToSuggestions, setToSuggestions] = useState(false);
   const [showFromSuggestions, setFromSuggestions] = useState(false);
+  const [showPkSuggestions, setPkSuggestions] = useState(false);
  
 
   const [vehicles, setVehicles] = useState(false)
@@ -52,14 +59,20 @@ const map_key = 'AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI';
   const [currentLocation, setCurrentLocation] = useState(null);
   const [initialRegion, setInitialRegion] = useState(null);
 
+  const [userTimeZone, setTimeZone] = useState("");
+
   const [fromLocation, setFromLocation] = useState(null);
   const [toLocation, setToLocation] = useState(null);
+
+  const [pkLocation, setPkLocation] = useState(null);
 
   const [routeCoordinates, setRouteCoordinates] = useState(null);
 
   const [off_route, setOffRoute] = useState(false);
 
   const [o_ploc, setOPloc] = useState([]);
+  const [or_time_btw, setOrTimeBtw] = useState(0);
+
 
   const [distance, setDistance] = useState(0);
   const [discount, setDiscount] = useState(0);
@@ -71,12 +84,20 @@ const map_key = 'AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI';
   
   const [scope, setScope] = useState('one-way');
   const [route_hours, setRouteHours] = useState(0);
+
   const [fee, setFee] = useState(0);
+  const [fee_text, setFeeText] = useState("");
+
+  const [ticket_fee, setCostPerTicket] = useState(0);
+  
   const [ds_rate, setDSRate] = useState(2);
 
   const [seat_cap, setSeatCap] = useState(0);
   const [min_pass, setMinPass] = useState(0);
   const [max_pass, setMaxPass] = useState(0);
+
+  const [max_buffer, setMaxBuffer] = useState(47);
+  const [sp_time, setSPTime] = useState("");
 
   const [vh_id, setVh_id] = useState(0);
   const [cost_fee, setCostFee] = useState(0);
@@ -85,11 +106,15 @@ const map_key = 'AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI';
 
   const [carry_on_bag, setCarryOnBag] = useState(0);
   const [stored_bag, setStoredBag] = useState(0);
+
+  const [day_, setDay_] = useState(0);
  
 
   const handleCloseSuggestions = () => {
+
     setToSuggestions(false);
     setFromSuggestions(false);
+    setPkSuggestions(false)
    
   };
 
@@ -111,6 +136,24 @@ const map_key = 'AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI';
   };
 
   useEffect(() => {
+
+    if(userTimeZone.length > 3){
+
+          const dtt = new Date();
+        
+          const formattedDate = moment(dtt).format('YYYY-MM-DD');
+          setStartDate_(formattedDate);
+        
+          const formattedTime = moment(dtt).tz(userTimeZone).format('HH:mm');
+          setStartTime_(formattedTime);
+
+    }
+
+  }, [userTimeZone]); 
+
+
+  useEffect(() => { 
+
     fetchUserVehiclesData(user.user_id).then((res) => {    
 
       if(res){
@@ -121,7 +164,26 @@ const map_key = 'AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI';
     
       });
 
+      const origin = 'Ikeja, lagos, Nigeria'
+      const destination = 'Dugbe,Ibadan, Nigeria'
 
+      calc_time_btw(origin, destination).then((res) => {    
+
+        if(res){
+  
+          console.log('dist_btw', res)
+  
+        }
+      
+        });
+
+      
+        // Get the current time zone
+setTimeZone(Localization.timezone); 
+
+console.log('User Time Zone:', userTimeZone);
+
+ 
   }, []);
 
   useEffect(() => {
@@ -138,6 +200,231 @@ const handleMaxPassChange = (value) => {
 
   setMaxPass(value);
 };
+
+
+
+
+function addMinutesToTime(inputTime, minutesToAdd, src="norm") {
+
+  console.log(inputTime, minutesToAdd, src)
+
+  const inputDate_init = new Date(inputTime);
+
+  const inputDate = new Date(inputTime);
+
+  let time_buffer = minutesToAdd/2
+  time_buffer = time_buffer < max_buffer ? time_buffer : max_buffer
+
+
+ // Add + 30 travel time buffer + 15 loading buffer
+ inputDate.setMinutes(inputDate.getMinutes() + minutesToAdd + time_buffer);
+
+ // Create a new Date object for the calculated date
+ const newDate = new Date(inputDate);
+
+ // Check if the new date is on the same day as the initial date
+ if (newDate.getDate() !== inputDate_init.getDate() && src !== "norm") {
+
+      setDay_(2); // If different days, set day_ to 1
+
+ } else {
+
+     setDay_(0); // If the same day, set day_ to 0
+ }
+
+ console.log(inputDate_init, newDate, day_, src)
+
+ // Format the result in the desired format
+ const formattedTime = newDate.toLocaleTimeString([], {
+   hour: '2-digit',
+   minute: '2-digit',
+   second: '2-digit',
+   hour12: true,
+ });
+
+ return formattedTime;
+}
+
+
+function convertTo24HourFormat_bk(timeString) {
+
+  console.log('cv format', timeString)
+  let time = new Date("1970-01-01 " + timeString);
+
+  let hours = time.getHours().toString().padStart(2, '0');
+  let minutes = time.getMinutes().toString().padStart(2, '0');
+
+  return hours + ":" + minutes;
+
+}
+
+function convertTo24HourFormat(timeString) {
+
+  const parsedTime = moment(timeString, 'h:mm:ss A');
+
+  if (parsedTime.isValid()) {
+    // Format the time in 24-hour format
+    const formattedTime = parsedTime.format('HH:mm:ss');
+    return formattedTime;
+  } else {
+    console.error('Invalid time string:', timeString);
+    // Return a default value or handle the error as needed
+    return '';
+  }
+}
+
+function add_pickup_location(){
+
+
+  if(fromLocation == null || toLocation == null){
+
+    Alert.alert(`Specify Trip start location`)
+
+    return
+}
+
+
+   let frDate;
+
+    let d_id = o_ploc.length + 1
+
+    let fr_loc = fromLocation?.description;
+    let fr_time = startTime_;
+    let sp_loc = toLocation?.description;
+
+    
+    //console.log(pkLocation,fr_time)
+    //return
+  
+    
+    //use pickup location as new start location
+    if(o_ploc.length > 0){
+
+        fr_loc = o_ploc[o_ploc.length - 1].location;
+        fr_time = convertTo24HourFormat(o_ploc[o_ploc.length - 1].time);
+
+        console.log(fr_loc, fr_time, o_ploc)
+        //return
+    }
+     
+    
+
+    if(d_id > 4){
+
+         Alert.alert(`You can only provide 3 pickup locatione per trip`);
+
+            return;
+    }
+
+
+    if(fr_loc <  5){
+
+         Alert.alert(`>Please enter your trip start location.`);
+        
+         return;
+    }
+    
+    
+    if(fr_time.length < 3){
+
+         Alert.alert(`Please enter your trip start time.`)
+
+            return;
+    }else{
+       
+       frDate = startDate_
+
+       fr_time = `${frDate}T${fr_time}`;
+    }
+
+   
+
+    let ploc_ = pkLocation;
+
+    let ptime_ = fr_time; //$("#p_time").val();
+
+    console.log(ploc_, ptime_)
+    //return
+
+
+    calc_time_btw(fr_loc, ploc_).then((res) => {    
+
+          if(res && res.durationInt && res.durationInt > 0){
+
+              //console.log('dist_btw', res)
+                  
+                  let dist_btw = 0; //from pk X to stop location
+
+                  let to_dist_btw = res.distance; //from pk A to pk B
+
+                  let time_btw = parseFloat(res.durationInt); // in mins
+
+                  let min_buffer_ = time_btw / 2
+
+                  min_buffer_ = min_buffer_ < max_buffer ? min_buffer_ : max_buffer //45mins or as set
+
+                  let n_time = "";
+                
+                  //console.log(to_dist_btw, time_btw, fr_time);
+
+                  if(ploc_.length > 1 && ptime_.length > 0){
+
+                    ptime_ = addMinutesToTime(ptime_, time_btw)
+
+                    n_time = convertTo24HourFormat(ptime_);
+
+                    n_time = `${frDate}T${n_time}`;
+
+                    console.log('cv ptime', ptime_, n_time)
+
+                    ////////////////////////////////////////////////
+                    //check for possible off route
+
+                    calc_time_btw(ploc_, sp_loc).then((res) => {    
+
+                      if(res && res.durationInt && res.durationInt > 0){
+            
+                          //console.log('dist_btw', res)
+                          //console.log('or_time_btw', or_time_btw)
+
+                                  dist_btw = res.distance;
+
+                                  setOrTimeBtw(parseFloat(res.durationInt)); // in mins
+
+                                  console.log('n_time2', n_time)
+                                  console.log('or_time_btw', res.durationInt)
+
+                                  //time to get to stop location from this pickup location
+                                  let sp_time_ = addMinutesToTime(n_time, res.durationInt, 'pk')
+
+                                      console.log(`dist from last pickup to stop location: ${(res.durationInt)} hrs i.e ${res.durationInt} mins >> new stop time is ${sp_time_}` );
+
+                                      setSPTime(sp_time_)
+
+                                      let _dim = {id: d_id, location: ploc_, time: ptime_, min_buffer : min_buffer_, dist_btw: to_dist_btw, min_btw: time_btw, min_to_dest: res.durationInt, dist_to_dest: dist_btw}
+                                      
+                                      setOPloc(prevOPloc => [...prevOPloc, _dim]);
+
+                                      //refresh_ploc();
+
+                                      console.log('pickup locations', o_ploc)
+
+                              }else {
+
+                                console.log('Unable to calculate time and distance.');
+                                setOrTimeBtw(0);
+                              }
+
+                            })
+
+                      }
+
+                }
+          
+            });
+            
+      
+     }
 
 
 function update_timing(off_route = false){ 
@@ -395,32 +682,23 @@ function update_fee (off_route = false) {
 
       }
 
-      if(max_pass > seat_cap){        
+      if( parseInt(max_pass) > parseInt(seat_cap) ){        
 
          Alert.alert('Maximum number of passenger cannot exceed Vehicle seating capacity.'); 
 
-         console.log(seat_cap,min_pass,max_pass)
-
-         return
+         setMaxPass(seat_cap)
         
       }
 
       else if(min_pass > seat_cap){        
 
-        Alert.alert('Minimum number of passenger cannot exceed Vehicle seating capacity'); 
-
-        console.log(seat_cap,min_pass,max_pass)
-         return
+          setMaxPass(seat_cap)
         
       }
 
        else if(min_pass > max_pass){        
 
-        Alert.alert('Minimum number of passenger cannot exceed Maximum number of passenger');
-
-         console.log(seat_cap,min_pass,max_pass)
-
-         return
+          setMaxPass(min_pass)
         
       }else{
 
@@ -626,7 +904,7 @@ let plat_fee = 0;
 let exp_rev = 0;
 
 
-    if(discount > 0){
+    if(parseFloat(discount) > 0){
 
             _discount = parseFloat(discount);
 
@@ -670,6 +948,8 @@ let exp_rev = 0;
     
 
     }else {
+
+      //setDiscount(0)
 
           appendage = `\nRental Cost: ${vh_currency} ${init_cost.toLocaleString()}\nCost of Job: ${vh_currency} ${init_cost_of_job.toLocaleString()}`;
 
@@ -729,16 +1009,19 @@ let exp_rev = 0;
 
     }
 
+    setDiscountInfo(discount_text);
+
     cost_per_ticket = Math.ceil(cost_per_ticket)
 
     setDays(no_of_days);
 
-     setCostInfo(break_down_invoice); 
+    setCostInfo(break_down_invoice); 
 
      console.log('cpt', cost_per_ticket); 
- 
-     console.log('total fee', fee_formated); 
-     console.log('fee total',fee_total);
+  
+     setFee(fee_total);
+     setFeeText(fee_formated);
+     setCostPerTicket(cost_per_ticket)
 
 }
 
@@ -857,26 +1140,31 @@ let exp_rev = 0;
   const handleStartDateChange = (event, selectedDate) => {
 
     if (selectedDate) {
-      console.log(selectedDate)
-      setStartDate_(selectedDate);
+
+      const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
+
+      setStartDate_(formattedDate);
       setStartDate(selectedDate);
+      console.log(formattedDate)
+
     }
   };
 
-  const handleEndDateChange = (event, selectedDate) => {
-
-    if (selectedDate) {
-      //console.log(selectedDate)
-      setEndDate_(selectedDate);
-      setEndDate(selectedDate);
-    }
-  };
 
   const handleStartTimeChange = (event, selectedTime) => {
 
     if (selectedTime) {
-      //console.log('selected time ', selectedTime)
-      setStartTime(selectedTime);
+
+        console.log('selected time ', selectedTime)
+        
+        const formattedTime = moment(selectedTime).tz(userTimeZone).format('HH:mm');
+
+        setStartTime(selectedTime);
+        setStartTime_(formattedTime);
+
+        console.log('formatted time ', formattedTime)
+
+
     }
 };
 
@@ -940,9 +1228,13 @@ let exp_rev = 0;
 
                        setFromLocation(initialPlaceData);
 
-                   }else{
+                   }else if(source === "to"){
 
-                        setToLocation(initialPlaceData);
+                      setToLocation(initialPlaceData);
+
+                }else{
+
+                        setPkLocation(initialPlaceData.description);
                    }
                     
                   } else {
@@ -1003,7 +1295,13 @@ let exp_rev = 0;
       
         return poly;
       }
-         
+   
+      const handleCancel = (id) => {
+        // Filter out the item with the given id
+        const updatedOPloc = o_ploc.filter(item => item.id !== id);
+        setOPloc(updatedOPloc);
+      };
+    
 
   const calculateDistanceAndTime = () => {
 
@@ -1058,8 +1356,18 @@ let exp_rev = 0;
 
     useEffect(() => { 
 
+      if(pkLocation !== null){
+
+           add_pickup_location()
+      }
     
-     if(vh_id > 0 && seat_cap > 0 && distance.length > 2 && route_hours > 0 && fromLocation !== null && toLocation !==null  ){
+    }, [pkLocation]);
+
+
+    useEffect(() => { 
+
+    
+     if( (discount > 0 || min_pass > 0 || max_pass > 0) && vh_id > 0 && seat_cap > 0 && distance.length > 2 && route_hours > 0 && fromLocation !== null && toLocation !==null  ){
       
          update_fee(false)
   
@@ -1237,7 +1545,7 @@ let exp_rev = 0;
  <View>
  <Text style={{padding:12, textAlign: 'right'}}>Start Time</Text>
   <DateTimePicker
-    value={endDate}
+    value={startTime}
     mode="time"
     display="clock"
     onChange={handleStartTimeChange}
@@ -1318,7 +1626,7 @@ let exp_rev = 0;
 
       <View>
         
-        <Text style={{margin: 5}}>appy discount</Text>
+        <Text style={{margin: 5}}>apply discount</Text>
     
       <TextInput
         style={styles.num_input}
@@ -1328,6 +1636,30 @@ let exp_rev = 0;
       />
       </View>
 
+    </View>
+
+    <View>
+    <TouchableOpacity  onPress={() => setPkSuggestions(true)} style={[{margin: 5} ]}>
+
+    <Text style={{margin: 5}}><Icon name='plus' size={24} color="black" /> add a pickup location</Text>
+          
+      </TouchableOpacity>
+
+    </View>
+
+
+    <View>
+      {o_ploc.map((item) => (
+
+        <View key={item.id+Math.random(500)+Math.random(200)} style={styles_ploc.box}>
+          <Text style={{color:'white', fontWeight:'800', width:'90%'}}>{item.location} | {item.time}</Text>
+
+          <TouchableOpacity onPress={() => handleCancel(item.id)} style={styles_ploc.cancelButton}>
+            <Icon name="close" size={24} color="white" />
+          </TouchableOpacity>
+        </View>
+
+      ))}
     </View>
 
 
@@ -1367,14 +1699,27 @@ let exp_rev = 0;
 
 
 
-      {fee > 0 && (
+      {ticket_fee > 0 && (
+        <View style={{marginTop: 10}}>
+
+          <View style={{marginLeft: 15}}>
+          <Text style={{fontSize:15}}>Total Fee:</Text>
+          <Text style={{fontSize:21, fontWeight:800}}>{vh_currency} {fee_text}</Text>
+          </View>
+
+          <View style={{marginLeft: 15, marginTop: 14}}>
+          <Text style={{fontSize:15}}>Cost Per Ticket:</Text>
+          <Text style={{fontSize:21, fontWeight:800}}>{vh_currency} {ticket_fee.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</Text>
+          </View>
 
         <TouchableOpacity
           style={styles.calculateButton}
           onPress={rentVehicle}
         >
-          <Text style={{textAlign:'center', color:'white'}}>Book Now</Text>
+          
+          <Text style={{textAlign:'center', color:'white'}}>Schedule Destination Service</Text>
         </TouchableOpacity>
+        </View>
 
       )}
     
@@ -1385,7 +1730,43 @@ let exp_rev = 0;
                             </View>
 
 
-                              
+                            <Modal visible={showPkSuggestions} animationType="slide">
+
+<TouchableOpacity onPress={() => handleCloseSuggestions()}  style={{marginTop: 45, padding: 12}}>
+    <Text>Save & Close</Text>
+  </TouchableOpacity>
+   
+   <View style={styles.loc_modal}>
+       <GooglePlacesAutocomplete
+              placeholder="Pickup Location"
+              onPress={(data, details) => onLocationSelect(data, details, 'pickup')}
+              query={{
+                key: map_key,
+                language: "en",
+                fields: "formatted_address",
+              }}
+              textInputProps={{
+                placeholderTextColor: 'gray',
+              }}
+              styles={{
+              
+                textInput: {
+                  fontSize: 16,
+                  backgroundColor: 'white',
+                  margin: 7,
+                  borderColor:'grey',
+                  borderWidth:2,
+                },
+                description: {
+                  color: 'green',
+                },
+              }}
+
+            />
+   </View>
+
+</Modal>
+
   <Modal visible={showToSuggestions} animationType="slide">
 
 <TouchableOpacity onPress={() => handleCloseSuggestions()}  style={{marginTop: 45, padding: 12}}>
@@ -1465,6 +1846,25 @@ let exp_rev = 0;
 
   )
 }
+
+
+
+const styles_ploc = StyleSheet.create({
+  box: {
+    backgroundColor: 'green',
+    padding: 10,
+    margin: 10,
+    borderRadius: 10,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: 'red',
+    borderRadius: 50,
+    padding: 5,
+  },
+});
 
 const styles = StyleSheet.create({
 

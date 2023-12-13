@@ -230,6 +230,41 @@ const fetchVehicle = async (vhid, currency) => {
   }
 };
 
+const calc_time_btw = async (origin, destination) => {
+
+  try {
+
+    const response = await fetch(`https://maps.googleapis.com/maps/api/distancematrix/json?origins=${encodeURIComponent(origin)}&destinations=${encodeURIComponent(destination)}&key=AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI`, {
+      method: "GET",
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+        const result = data.rows[0].elements[0];
+        const distance = result.distance.text;
+        const duration = result.duration.text;
+        const durationInt = (result.duration.value/60); //in minutes
+
+        return {
+          success: true,
+          distance,
+          durationInt,
+          
+        };
+
+    } else {
+
+      throw new Error(`Request failed with status: ${response.status}`);
+    }
+  } catch (error) {
+    //console.error('derr',error);
+    throw error; 
+  }
+};
+
+
+
 
 const sendRentData = async (rentData) => {
   try {
@@ -304,7 +339,9 @@ const getUserData = (user_id) => {
     method: "GET",
   });
 };
- 
+
+
+
 const getUserDebits = (user_id) => {
   return FetchHandler({
     url: "admin/user_debits/"+user_id, 
@@ -397,6 +434,7 @@ const getTotalTranx = () => {
 
 module.exports = {
   fetchAccName,
+  calc_time_btw,
   getAllUsers,
   getMailStatus,
   getTotalTranx,
