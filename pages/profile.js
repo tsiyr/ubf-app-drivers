@@ -29,8 +29,7 @@ const UserProfile = () => {
       };
     
       const handleDeleteAccountPress = () => {
-        // Handle the deletion of the user account
-        // You may want to show a confirmation modal before deleting the account
+        
         console.log('Delete Account');
       };
 

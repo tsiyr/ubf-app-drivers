@@ -1,6 +1,6 @@
 import React from 'react';
 import { View } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome'; // You can choose another icon library if desired
+import Icon from 'react-native-vector-icons/FontAwesome'; 
 
 const Rating = ({ rating, starColor }) => {
   // Determine the displayed rating based on your rounding rules
@@ -12,9 +12,9 @@ const Rating = ({ rating, starColor }) => {
     stars.push(
       <Icon
         key={i}
-        name={i <= displayedRating ? 'star' : 'star-o'} // You can choose different FontAwesome icons
+        name={i <= displayedRating ? 'star' : 'star-o'} 
         size={20}
-        color={starColor} // Pass the star color as a prop
+        color={starColor} 
       />
     );
   }

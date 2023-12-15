@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, TextInput, View, Text, Image, FlatList, TouchableOpacity, Modal, StyleSheet, ActivityIndicator, Button } from 'react-native';
-import { fetchUserVehicles } from '../utils/services';
+import { ScrollView, Alert, View, Text, Image, FlatList, TouchableOpacity, Modal, StyleSheet, ActivityIndicator, Button } from 'react-native';
+import { fetchUserVehicles, toggle_vh } from '../utils/services';
 import NoVehiclesFoundView from '../components/no_vehicle_found';
 import { useAuth } from '../auth';
-import Icon from 'react-native-vector-icons/FontAwesome'; // replace with the correct library
+import Icon from 'react-native-vector-icons/FontAwesome'; 
+import { countryCurrencyMapping, getCountryNameByCode} from '../utils/variables';
+import * as Localization from 'expo-localization';
 
 import Section1 from '../list_vh_sections/section_1';
 import Section2 from '../list_vh_sections/section_2';
@@ -24,38 +26,38 @@ const url="https://urbanfleet.biz/";
     //const [isLoading, setIsLoading] = useState(true);
     const [vehicles, setVehicles] = useState(false);
     const [showForm, setShowForm] = useState(false);
+    const [vcurrency, setCurrency] = useState(false);
 
     const [currentTab, setCurrentTab] = useState(1);
     const [formData, setFormData] = useState({
       // Initial form data
+      modelName: '',
       vehicleMake: '',
-      vehicleModel: '',
+      vehicleMakeOther: '',
       category: '',
       modelYear: '',
       regPlateNumber: '',
       vinNumber: '',
       usageType: '',
       seatingCapacity: '',
-      tonnage: '',
+      tonnage: 'na',
       fuelType: '',
       hasAirConditioner: false,
       hasSeatBelt: false,
       hasSpareTire: false,
-      licenseCategory: '',
+      licenseDocument: '',
       licenseExpiryDate: '',
-      frontView: '',
-      sideViewLeft: '',
-      sideViewRight: '',
-      interiorFront: '',
-      interiorBack: '',
-      rearView: '',
-      tires: '',
-      // ... add other fields as needed
+      insuranceCategory: '',
+      overview: '',
+      vcountry: '',
+      vstate: '',
+      vlga: '',
+      vcurrency: '',
+      vprice:'',
     });
 
     const [imgData, setImgData] = useState({
-      name: '',
-      description: '',
+
       frontView: null,
       sideViewLeft: null,
       sideViewRight: null,
@@ -63,25 +65,161 @@ const url="https://urbanfleet.biz/";
       interiorBack: null,
       rearView: null,
       tires: null,
-      // Add more views as needed
     });
 
 
     const handleNext = () => {
-      // Validate and save data
-      // Move to the next tab
       setCurrentTab(currentTab + 1);
     };
   
     const handlePrevious = () => {
-      // Move to the previous tab
       setCurrentTab(currentTab - 1);
     };
+
+    useEffect(() => {
+
+      async function getUserLocation() {
+        // Get the user's locale
+        const userLocale = Localization.locale;
+  
+        const [userCountry, userCurrency] = userLocale.split('-');
+  
+        setCurrency(countryCurrencyMapping[userCurrency]); 
+
+        setFormData({ ...formData, vcurrency: countryCurrencyMapping[userCurrency] })
+        
+        console.log(countryCurrencyMapping[userCurrency])
+  
+      }
+  
+      getUserLocation();
+  
+    }, []);
+
+    const sendImagesAndDataToServer = async (imageObject, formObject) => {
+
+        const emptyFields = [];
+    
+        for (const key in formObject) {
+          if (formObject[key] === '') {
+            emptyFields.push(key);
+          }
+        }
+    
+        for (const key in imageObject) {
+          if (imageObject[key] === null) {
+            emptyFields.push(key);
+          }
+        }
+    
+        if (emptyFields.length > 0) {
+          const errorMessage = `Please provide the following data: ${emptyFields.join(', ')}`;
+          Alert.alert('Missing Data', errorMessage)
+          
+          return;
+        }
+      
+    
+
+      const imageKeys = Object.keys(imageObject);
+    
+      const formData = new FormData();
+    
+      formData.append('user_id', user.user_id); //
+      formData.append('account_type', user.account_type); //
+      formData.append('group_id', user.groupID); //
+      
+      formData.append('vtitle', formObject.modelName); //
+
+      formData.append('vtype', formObject.category); //
+      formData.append('vfuel', formObject.fuelType); //
+
+      formData.append('vyear', formObject.modelYear); //
+
+      formData.append('vseats', formObject.seatingCapacity);  //
+      formData.append('vuse', formObject.usageType); //
+      formData.append('vtonnage', formObject.tonnage);//
+
+      formData.append('vprice', formObject.vprice);
+      formData.append('voverview', formObject.overview); //
+
+      formData.append('vstate', formObject.vstate);//
+      formData.append('vcountry', formObject.vcountry);//
+      formData.append('vlga', formObject.vlga);//
+
+      formData.append('vprice', parseFloat(formObject.vprice));//
+
+      formData.append('currency_code', vcurrency);//
+
+      formData.append('seatbelt', formObject.hasSeatBelt); //
+      formData.append('spareTire', formObject.hasSpareTire); //
+      formData.append('ac', formObject.hasAirConditioner); //
+
+      formData.append('vrn', formObject.regPlateNumber); //
+      formData.append('vin', formObject.vinNumber); //
+
+      formData.append('brandName', formObject.vehicleMake); //
+      formData.append('brandOthers', formObject.vehicleMakeOther); //
+
+      formData.append('license_expiry', formObject.licenseExpiryDate); //
+
+      formData.append('insurance_category', formObject.insuranceCategory); //
+
+
+      formData.append('licenseDocument', {
+          uri: formObject.licenseDocument,
+          type: 'image/jpeg', 
+          name: 'licenseDocument.jpg',
+        });
+    
+      
+      imageKeys.forEach((key) => {
+        const fileUri = imageObject[key];
+        formData.append(key, {
+          uri: fileUri,
+          type: 'image/jpeg', 
+          name: `${key}.jpg`,
+        });
+      });
+
+
+    
+      try{  
+        
+        const response = await fetch('https://urbanfleet.biz/list-vehicle-api.php', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+          body: formData,
+        });
+    
+        const responseText = await response.text(); // Log the raw response text
+        console.log('Raw response:', responseText);
+    
+         const data = JSON.parse(responseText);
+         if(data.status && data.status == true){
+            
+            //
+         }
+
+      } catch (error) {
+         console.error('Error uploading image:', error);
+      }
+
+
+    };
+
+
+    
   
     const handleSubmit = () => {
       // Submit the entire form data
-      console.log(formData);
-      // You can send this data to your server or perform other actions
+     // console.log(imgData)
+     // console.log(formData)
+
+      sendImagesAndDataToServer(imgData, formData);
+
     };
 
     const toggleForm = () => {
@@ -106,6 +244,39 @@ const url="https://urbanfleet.biz/";
     };
   
 
+      const toggleVh = (vh_id) => {
+
+        
+        toggle_vh(vh_id).then((res) => {    
+    
+          if(res){
+            
+              refresh_vh()
+    
+          }
+    
+            console.log(res)
+        
+          });
+      }
+
+
+      const refresh_vh = () => {
+
+        fetchUserVehicles(user.user_id).then((res) => {    
+    
+          if(res){
+            
+            console.log( res)
+            setVehicles(res)
+    
+          }
+    
+            //console.log(res)
+        
+          });
+      }
+
 
       useEffect(() => {
 
@@ -113,7 +284,7 @@ const url="https://urbanfleet.biz/";
     
           if(res){
             
-            //console.log(user.user_id, res)
+            console.log(user.user_id, res)
             setVehicles(res)
     
           }
@@ -124,6 +295,23 @@ const url="https://urbanfleet.biz/";
     
     
       }, []);
+
+
+      useEffect(() => {
+
+         //console.log(imgData)
+         //console.log(formData)
+    
+    
+      }, [imgData, formData]);
+
+
+      const getStatusStyle = (status) => {
+        return String(status).toLowerCase().includes('online')
+          ? styles.onlineStatus
+          : styles.offlineStatus;
+      };
+    
     
    
     const renderRentalItem = ({ item }) => (
@@ -137,19 +325,12 @@ const url="https://urbanfleet.biz/";
           style={styles.ctaButtonsContainer}
           contentContainerStyle={styles.ctaButtonsContent}
         >
-          <TouchableOpacity style={styles.ctaButton} onPress={() => setModalVisible(true)}>
-            <Text style={styles.ctaButtonText}>{item.status}</Text>
+          <TouchableOpacity style={[styles.ctaButton, getStatusStyle(item.status)]} onPress={() => toggleVh(item.id)}>
+             <Text style={[styles.ctaButtonText]}>{item.status}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Driver Info</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Update Location</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.ctaButton}>
-            <Text style={styles.ctaButtonText}>Maintenance history</Text>
-          </TouchableOpacity>
-          {/* Add more CTAs as needed */}
+          
+        
+        
         </ScrollView>
       </View>
     );
@@ -298,6 +479,14 @@ const url="https://urbanfleet.biz/";
       color: 'white',
       fontSize: 16,
       fontWeight: 'bold',
+    },
+
+    onlineStatus: {
+      backgroundColor: 'red', 
+    },
+
+    offlineStatus: {
+      backgroundColor: 'green', 
     },
 
     modalContainer: {

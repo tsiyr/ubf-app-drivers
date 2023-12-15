@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { useNavigation } from '@react-navigation/native'; // Import the necessary navigation hook
+import { useNavigation } from '@react-navigation/native'; 
 
 
 
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: '100%',
-    height: 100, // Adjust the image height as needed
+    height: 100, 
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
   },

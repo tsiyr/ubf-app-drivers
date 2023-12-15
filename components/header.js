@@ -38,12 +38,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 7,
     marginVertical: 7,
-    backgroundColor: 'white', // Customize the background color
+    backgroundColor: 'white', 
   },
   logo: {
     marginVertical: 2,
-    width: 130, // Set the desired width for your logo
-    height: 30, // Set the desired height for your logo
+    width: 130, 
+    height: 30, 
   },
 
   icon_container:{

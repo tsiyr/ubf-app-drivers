@@ -1,9 +1,16 @@
 // sections/Section1.js
-import React from 'react';
-import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, ScrollView, Switch } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, KeyboardAvoidingView, ScrollView, Switch, Modal, TouchableOpacity  } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
+import { GooglePlacesAutocomplete } from "react-native-google-places-autocomplete";
+
+const map_key = 'AIzaSyDatXR6EOR5ohxui9mFgmr7qP3Rnb5n2oI';
 
 const Section1 = ({ formData, setFormData }) => {
+
+
+  const [showOthers, setShowOthers] = useState(false);
+  const [showAddress, setShowAddress] = useState(false);
 
   const options = [
 
@@ -32,6 +39,82 @@ const Section1 = ({ formData, setFormData }) => {
   // Sort the options alphabetically based on labels
   options.sort((a, b) => a.label.localeCompare(b.label));
 
+  const update_make = (vm) => {
+
+    
+  setFormData({ ...formData, vehicleMake: vm })
+
+    if(vm === 'others'){
+
+       setShowOthers(true)
+
+    }else{
+      
+      setShowOthers(false)
+
+    }
+  }
+
+  const onLocationSelect = (data, details, src) => {
+
+    if (data && details) {
+
+        //console.log(data, details)
+
+         const description = data["description"];
+         const placeId = data["place_id"];
+
+         const placeDetailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?placeid=${placeId}&key=${map_key}`;
+
+          fetch(placeDetailsUrl)
+            .then(response => response.json())
+            .then(data => {
+              if (data.status === "OK" && data.result && data.result.geometry && data.result.geometry.location) {
+                
+
+                const country = data.result.address_components.find(component => component.types.includes('country'))?.long_name || '';
+                const state = data.result.address_components.find(component => component.types.includes('administrative_area_level_1'))?.long_name || '';
+                const locality = data.result.address_components.find(component => component.types.includes('locality'))?.long_name || '';
+          
+                console.log('Country:', country);
+                console.log('State:', state);
+                console.log('Locality:', locality);
+          
+                
+                setFormData({
+                  ...formData,
+                  vcountry: country,
+                  vstate: state,
+                  vlga: locality
+                });
+
+                
+              } else {
+
+                console.error("Error getting place details");
+              }
+
+            })
+            .catch(error => {
+
+              console.error("Error fetching place details:", error);
+            });
+
+      
+      } else {
+        console.error("Error selecting location. Data and details are missing.");
+      }
+    
+       
+  };
+
+
+  const handleCloseAddress = () => {
+
+      setShowAddress(false)
+  }
+
+ 
   
   return (
 
@@ -42,13 +125,13 @@ const Section1 = ({ formData, setFormData }) => {
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
   
     <View style={styles.container}>
+
       <Text>Vehicle Make:</Text>
-      {/* Replace the Picker component with your actual dropdown component */}
       <Picker
 
        style = {styles.picker}
         selectedValue={formData.vehicleMake}
-        onValueChange={(itemValue) => setFormData({ ...formData, vehicleMake: itemValue })}
+        onValueChange={(itemValue) => update_make(itemValue)}
       >
         {options.map((option) => (
           <Picker.Item key={option.value} label={option.label} value={option.value} />
@@ -56,8 +139,38 @@ const Section1 = ({ formData, setFormData }) => {
         
       </Picker>
 
+    {showOthers && 
+    <View style={{alignItems:'center', marginVertical: 20, width:'100%'}}>
+      <Text>Specify Your Vehicle Make:</Text>
+      <TextInput
+        style = {[styles.input]}
+        placeholder="e.g Toyota"
+        value={formData.vehicleMakeOther}
+        onChangeText={(text) => setFormData({ ...formData, vehicleMakeOther: text })}
+      />
+      </View>
+      }
 
-<Text>Vehicle Category:</Text>
+
+      
+    <Text>Model Name:</Text>
+      <TextInput
+      style = {styles.input}
+        placeholder="e.g Camry"
+        value={formData.modelName}
+        onChangeText={(text) => setFormData({ ...formData, modelName: text })}
+      />
+
+<Text style={{marginTop:20}}>Model Year:</Text>
+      <TextInput
+      style = {styles.input}
+        placeholder="Model Year"
+        value={formData.modelYear}
+        onChangeText={(text) => setFormData({ ...formData, modelYear: text })}
+      />
+
+
+<Text style={{marginTop:20}}>Vehicle Category:</Text>
 <Picker
 
 style = {styles.picker}
@@ -65,23 +178,17 @@ style = {styles.picker}
  onValueChange={(itemValue) => setFormData({ ...formData, category: itemValue })}
 >
  <Picker.Item label="Select Vehicle Category" value="" />
- <Picker.Item label="Car" value="car" />
- <Picker.Item label="SUV" value="suv" />
- <Picker.Item label="Bus" value="bus" />
- <Picker.Item label="Van" value="van" />
- <Picker.Item label="Pickup" value="pickup" />
+ <Picker.Item label="Car" value="Car" />
+ <Picker.Item label="SUV" value="SUV" />
+ <Picker.Item label="Bus" value="Bus" />
+ <Picker.Item label="Van" value="Van" />
+ <Picker.Item label="Pickup" value="Pickup" />
  <Picker.Item label="Light Truck" value="lighttruck" />
  <Picker.Item label="Earth Moving Equipment" value="EarthMover" />
- {/* Add more items based on your JSON API data */}
 </Picker>
 
-      <Text>Model Year:</Text>
-      <TextInput
-      style = {styles.input}
-        placeholder="Model Year"
-        value={formData.modelYear}
-        onChangeText={(text) => setFormData({ ...formData, modelYear: text })}
-      />
+
+  
 
       <Text>Reg/Plate Number:</Text>
       <TextInput
@@ -109,15 +216,14 @@ style = {styles.picker}
  onValueChange={(itemValue) => setFormData({ ...formData, usageType: itemValue })}
 >
  <Picker.Item label="Select Usage Type" value="" />
- <Picker.Item label="Haulage" value="haulage" />
- <Picker.Item label="Passenger" value="passenger" />
- {/* Add more items based on your JSON API data */}
+ <Picker.Item label="Haulage" value="Haulage" />
+ <Picker.Item label="Passenger" value="Passenger" />
 </Picker>
 
       
 
       {/* Add conditional rendering based on the selected usage type */}
-      {formData.usageType === 'passenger' && (
+      {formData.usageType === 'Passenger' && (
         <View style={{width:'100%', marginHorizontal: 12, alignItems:'center'}}>
           <Text>Seating Capacity:</Text>
           <TextInput
@@ -129,7 +235,7 @@ style = {styles.picker}
         </View>
       )}
 
-      {formData.usageType === 'haulage' && (
+      {formData.usageType === 'Haulage' && (
          <View style={{width:'100%', marginHorizontal: 12, alignItems:'center'}}>
           <Text>Tonnage:</Text>
           <TextInput
@@ -141,13 +247,7 @@ style = {styles.picker}
         </View>
       )}
 
-      <Text>Fuel Type:</Text>
-      <TextInput
-      style = {styles.input}
-        placeholder="Fuel Type"
-        value={formData.fuelType}
-        onChangeText={(text) => setFormData({ ...formData, fuelType: text })}
-      />
+     
 
       <Picker
 
@@ -156,9 +256,9 @@ style = {styles.picker}
       onValueChange={(itemValue) => setFormData({ ...formData, fuelType: itemValue })}
       >
       <Picker.Item label="Select Fuel Type" value="" />
-      <Picker.Item label="Petrol" value="haulage" />
-      <Picker.Item label="Diesel" value="passenger" />
-      <Picker.Item label="Electric" value="electric" />
+      <Picker.Item label="Petrol" value="Petrol" />
+      <Picker.Item label="Diesel" value="Diesel" />
+      <Picker.Item label="Electric" value="Electric" />
 
       </Picker>
 
@@ -188,10 +288,81 @@ style = {styles.picker}
         </View>
       </View>
 
+
+      <Text style={{marginTop:20}}>Why should I rent your vehicle?:</Text>
+      <TextInput
+      style = {styles.input}
+        placeholder="Tell us about this vehicle"
+        value={formData.overview}
+        onChangeText={(text) => setFormData({ ...formData, overview: text })}
+      />
+
+
+     <Text style={{marginTop:20}}>What is your vehicle's current worth in {formData.vcurrency}?</Text>
+      <TextInput
+      style = {styles.input}
+        placeholder="Vehicle's value"
+        value={formData.vprice}
+        onChangeText={(text) => setFormData({ ...formData,vprice: text })}
+      />
+
+
+    <TouchableOpacity onPress={() => setShowAddress(true)}  style={{margin: 5, width: '100%', alignItems: 'center'}}>
+
+    <Text style={{margin: 5}}>Where is this vehicle located?</Text>
+
+        <Text style={styles.input}>{formData.vstate.length > 2 && (`${formData.vlga}, ${formData.vstate}, ${formData.vcountry}`)}{formData.vstate.length < 2 && ('Vehicle Address')}
+        </Text>
+
+    </TouchableOpacity>
+
+
+
+
     </View>
 
     </ScrollView>
+
+             
+<Modal visible={showAddress} animationType="slide">
+
+<TouchableOpacity onPress={() => handleCloseAddress()}  style={{marginTop: 45, padding: 12}}>
+    <Text>Save & Close</Text>
+  </TouchableOpacity>
+   
+   <View style={styles.loc_modal}>
+       <GooglePlacesAutocomplete
+              placeholder="Your Vehicle Address"
+              onPress={(data, details) => onLocationSelect(data, details, 'pickup')}
+              query={{
+                key: map_key,
+                language: "en",
+                fields: "formatted_address",
+              }}
+              textInputProps={{
+                placeholderTextColor: 'gray',
+              }}
+              styles={{
+              
+                textInput: {
+                  fontSize: 16,
+                  backgroundColor: 'white',
+                  margin: 7,
+                  borderColor:'grey',
+                  borderWidth:2,
+                },
+                description: {
+                  color: 'green',
+                },
+              }}
+
+            />
+   </View>
+
+</Modal>
     </KeyboardAvoidingView>
+
+    
    
   );
 };
@@ -204,6 +375,13 @@ const styles = StyleSheet.create({
     alignItems:'center',
     marginBottom: 200
   },
+
+  loc_modal:{
+
+    zIndex: 334000,
+    flex: 1,
+    
+ },
  
   modalContainer: {
     flex: 1,

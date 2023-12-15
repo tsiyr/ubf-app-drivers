@@ -6,7 +6,7 @@ import { View, TextInput, StyleSheet, Text, Dimensions } from 'react-native';
 const VRHeader = () => {
   const screenWidth = Dimensions.get('window').width;
 
-  return (
+  return ( 
     <View style={[styles.header, { width: screenWidth }]}>
       <Text style={{padding:5, marginTop:12, color: 'white'}}>Vehicle Rental Service</Text>
       <TextInput

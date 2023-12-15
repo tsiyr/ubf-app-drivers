@@ -9,7 +9,7 @@ const VRBtns = () => {
   return (
     <View style={[styles.header, { width: screenWidth }]}>
 
-      <Text style={styles.btns}>FAQS</Text>
+      <Text style={styles.btns}>FAQS</Text> 
 
       <Text style={styles.btns}>Rent Calculator</Text>
 

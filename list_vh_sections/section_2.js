@@ -14,7 +14,6 @@ const Section2 = ({formData, setFormData}) => {
     interiorBack: 'https://urbanfleet.biz/assets/images/vinterior_back.jpg',
     rearView: 'https://urbanfleet.biz/assets/images/vrear.jpg',
     tires: 'https://urbanfleet.biz/assets/images/vtires.jpg',
-    // Add more views as needed
   };
 
 
@@ -27,17 +26,17 @@ const Section2 = ({formData, setFormData}) => {
     });
 
     if (!result.canceled) {
-      setFormData({ ...formData, [view]: result });
+
+      delete result.cancelled;
+      setFormData({ ...formData, [view]: result.assets[0].uri });
       console.log(formData)
+
     }
   };
 
-  const isViewUploaded = (view) => formData[view] !== null;
+ 
 
-  const handleSubmit = () => {
-    // Handle form submission, including formData.frontView, formData.sideViewLeft, etc.
-    console.log(formData);
-  };
+  const isViewUploaded = (view) => formData[view] !== null;
 
 
   return (
@@ -52,7 +51,7 @@ const Section2 = ({formData, setFormData}) => {
           formData[view] && (
             <View key={index} style={styles.photo_container}>
               <Image
-                source={{ uri: formData[view].uri }}
+                source={{ uri: formData[view] }}
                 style={{ width: 200, height: 200, borderRadius: 34  }}
               />
               
@@ -75,8 +74,6 @@ const Section2 = ({formData, setFormData}) => {
             </View>
           )
         ))}
-
-        {/* Add more buttons for additional views as needed */}
 
         
       </View>

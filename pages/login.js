@@ -60,11 +60,18 @@ const Auth = () => {
 
       if(res.success){
 
-        login(res, currency)
+        if(res.user_id){
 
+          login(res, currency)
+
+        }else{
+
+          setError(res.messages)
+        }
+        
       }else{
        
-        setError('Invalid Login Credentials')
+        setError('Network Error. Please retry')
 
       }
 

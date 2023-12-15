@@ -86,13 +86,6 @@ const signupFetch = (email,first_name, last_name, gender, phone, country) => {
 };
 
 
-const adminLoginFetch = (data) => {
-  return FetchHandler({
-    url: "user/admin-login",
-    method: "POST",
-    data: JSON.stringify(data),
-  });
-};
 
 const registationFetch = (data) => {
 
@@ -153,38 +146,10 @@ const getCountryCode = () => {
 };
 
 
-
-const postPayment = (data) => {
+const toggle_vh = (vh_id) => {
   return FetchHandler({
-    url: "user/send",
-    method: "POST",
-    data: JSON.stringify({ data: data }),
-  });
-};
-
-const postWithdrawal = (data) => {
-  return FetchHandler({
-    url: "user/withdraw",
-    method: "POST",
-    data: JSON.stringify({ data: data }),
-  });
-};
-
-
-const updatePayment = (id, note, status) => {
-  return FetchHandler({
-    url: "user/update-payment-status",
-    method: "POST",
-    data: JSON.stringify({ trx_id: id, note: note, status: status }),
-  });
-};
-
-
-const updateWithdrawal = (id, reason, status) => {
-  return FetchHandler({
-    url: "user/update-withdrawal-status",
-    method: "POST",
-    data: JSON.stringify({ trx_id: id,  reasons: reason, status: status }),
+    url: `includes/vehicle_status_api.php?vhID=${vh_id}`,
+    method: "GET",
   });
 };
 
@@ -342,91 +307,11 @@ const getUserData = (user_id) => {
 
 
 
-const getUserDebits = (user_id) => {
-  return FetchHandler({
-    url: "admin/user_debits/"+user_id, 
-    method: "GET",
-  });
-};
-
-const getUserCredits = (user_id) => {
-  return FetchHandler({
-    url: "admin/user_credits/"+user_id, 
-    method: "GET",
-  });
-};
-
-
 const fetchAccName = (data) => {
   return FetchHandler({
     url: "user/acc-name/"+data,
     method: "GET",
   });
-};
-
-const getHistoryFetch = () => {
-  return FetchHandler({
-    url: "history", /*ticket*/
-    method: "GET",
-  });
-};
-
-
-const getReferrals = () => {
-  return FetchHandler({
-    url: "user/referrals", /*ticket*/
-    method: "GET",
-  });
-};
-
-
-
-const getPayments = (data) => {
-  return FetchHandler({
-    url: "user/transfers/"+data,
-    method: "GET",
-  });
-};
-
-
-const getUserTotalBalance = (user_id, wallet_id) => {
-  return FetchHandler({
-    url: "admin/user_balance/"+user_id+"/"+wallet_id, 
-    method: "GET",
-  });
-};
-
-
-const verifyEmail = (email, vcode) => {
-  return FetchHandler({
-    url: "user/verify/"+email+"/"+vcode, 
-    method: "GET",
-  });
-};
-
-
-
-
-const getAllUsers = () => {
-  return FetchHandler({
-    url: "admin/all_users", 
-    method: "GET",
-  });
-};
-
-
-const getMailStatus = (wallet_id) => {
-  return FetchHandler({
-    url: "user/mail_status/"+wallet_id, 
-    method: "GET",
-  });
-};
-
-const getTotalTranx = () => {
-  return FetchHandler({
-    url: "admin/total_amount_exchanged", 
-    method: "GET",
-  }); 
 };
 
 
@@ -435,21 +320,11 @@ const getTotalTranx = () => {
 module.exports = {
   fetchAccName,
   calc_time_btw,
-  getAllUsers,
-  getMailStatus,
-  getTotalTranx,
   loginFetch,
   signupFetch,
-  adminLoginFetch,
+  toggle_vh,
   registationFetch,
-  getHistoryFetch,
-  getReferrals,
   profileFetch,
-  postPayment,
-  postWithdrawal,
-  updatePayment,
-  updateWithdrawal,
-  getPayments,
   fetchVehicles,
   fetchUserVehicles,
   fetchUserVehiclesData,
@@ -459,12 +334,8 @@ module.exports = {
   fetchDSTrips,
   fetchTicketData,
   getUserData,
-  getUserDebits,
-  getUserCredits,
-  getUserTotalBalance,
   resetPassword,
   resetEmail,
   updatePassword,
   getCountryCode,
-  verifyEmail
 };

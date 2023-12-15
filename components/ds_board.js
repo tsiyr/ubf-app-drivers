@@ -17,11 +17,10 @@ const DepartureBoard = () => {
     { from: 'New York', destination: 'New York',  date_time: '08:00 AM'},
     { from: 'New York', destination: 'New York',  date_time: '08:00 AM'},
     { from: 'New York', destination: 'New York',  date_time: '08:00 AM'},
-    // Add more departure data as needed
   ];
 
   const scrollY = useRef(new Animated.Value(0)).current;
-  const ITEM_HEIGHT = 40; // Adjust this based on your row height
+  const ITEM_HEIGHT = 40; // Adjust based on your row height
 
   useEffect(() => {
     const animation = Animated.timing(scrollY, {

@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
   },
  
   card: {
-    width: '49%', // 3 cards in a row, with some spacing
+    width: '49%', 
     backgroundColor: 'white',
     borderRadius: 8,
     shadowColor: '#000',
@@ -134,7 +134,7 @@ const styles = StyleSheet.create({
   },
   cardImage: {
     width: '100%',
-    height: 150, // Adjust the image height as needed
+    height: 150, 
     borderTopLeftRadius: 8,
     borderTopRightRadius: 8,
   },

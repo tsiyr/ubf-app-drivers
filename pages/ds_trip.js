@@ -1202,6 +1202,8 @@ let exp_rev = 0;
 
         if (data && details) {
 
+          console.log(data, details)
+
              const description = data["description"];
              const placeId = data["place_id"];
 
@@ -1221,6 +1223,15 @@ let exp_rev = 0;
                       latitude: latitude,
                       longitude: longitude
                     };
+
+                    const country = data.result.address_components.find(component => component.types.includes('country'))?.long_name || '';
+                    const state = data.result.address_components.find(component => component.types.includes('administrative_area_level_1'))?.long_name || '';
+                    const locality = data.result.address_components.find(component => component.types.includes('locality'))?.long_name || '';
+              
+                    console.log('Country:', country);
+                    console.log('State:', state);
+                    console.log('Locality:', locality);
+              
                   
                     //console.log(source)
 
@@ -1399,7 +1410,7 @@ let exp_rev = 0;
         const centerLat = (minLat + maxLat) / 2;
         const centerLng = (minLng + maxLng) / 2;
   
-        const padding = 0.6; // Adjust padding as needed
+        const padding = 0.6; 
         const spanLat = (maxLat - minLat) + padding;
         const spanLng = (maxLng - minLng) + padding;
   
@@ -1945,7 +1956,7 @@ const styles = StyleSheet.create({
   
 map: {
     width: "100%",
-    height: 200, // Adjust the height as needed
+    height: 200, 
   },
 
   calculateButton: {

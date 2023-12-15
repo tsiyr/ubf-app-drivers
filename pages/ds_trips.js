@@ -70,8 +70,6 @@ const url="https://urbanfleet.biz/";
 
             <Text style={styles.ctaButtonText}>Platform fee: {item.platform_fee}</Text>
 
-
-          {/* Add more CTAs as needed */}
         </ScrollView>
        
       </View>

@@ -71,9 +71,6 @@ const url="https://urbanfleet.biz/";
             <Text style={styles.ctaButtonText}>Trip Info</Text>
           </TouchableOpacity>}
 
-
-
-          {/* Add more CTAs as needed */}
         </ScrollView>
       </View>
     );

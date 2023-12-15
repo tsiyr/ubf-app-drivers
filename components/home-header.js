@@ -22,7 +22,7 @@ const HomeHeader = ({title, navigation}) => {
     <View style={[styles.header, { width: screenWidth }]}>
        
           <Image
-          source={require('../assets/logo.png')} // Replace with your app logo
+          source={require('../assets/logo.png')} 
           style={styles.logo}
           />
       
@@ -65,17 +65,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: 14,
     marginVertical: 7,
-    backgroundColor: 'white', // Customize the background color
+    backgroundColor: 'white', 
   },
   logo: {
     marginVertical: 2,
-    width: 130, // Set the desired width for your logo
-    height: 30, // Set the desired height for your logo
+    width: 130,
+    height: 30, 
   },
   dp: {
     marginVertical: 2,
-    width: 40, // Set the desired width for your logo
-    height: 40, // Set the desired height for your logo
+    width: 40, 
+    height: 40, 
     resizeMode: 'contain', 
     borderRadius: 50
   },

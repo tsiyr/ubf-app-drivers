@@ -6,8 +6,9 @@ import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import * as DocumentPicker from 'expo-document-picker';
 
 const Section3 = ({ formData, setFormData }) => {
+
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
-  const [selectedDocument, setSelectedDocument] = useState(null);
+  const [selectedDocument, setSelectedDocument] = useState("");
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -24,16 +25,18 @@ const Section3 = ({ formData, setFormData }) => {
 
   const pickDocument = async () => {
     let result = await DocumentPicker.getDocumentAsync({
-      type: 'application/pdf', // Adjust the MIME type based on the allowed document types
+      type: 'application/pdf', 
     });
 
-    console.log(result)
+     //console.log(result)
 
-    if (result.type === 'success') {
-      // Update the selected document URI in the state
-      setSelectedDocument(result.uri);
-      // You can also handle the file in other ways, such as uploading it to a server
-      // Be sure to add error handling and additional logic as needed
+     if (!result.canceled) {
+
+      delete result.cancelled;
+
+      setSelectedDocument(result.assets[0].name);
+      setFormData({ ...formData, licenseDocument: result.assets[0].uri });
+
     }
   };
 
@@ -49,9 +52,12 @@ const Section3 = ({ formData, setFormData }) => {
 
       {/* File Upload for License Document */}
       <TouchableOpacity  style={{alignItems:'center'}} onPress={pickDocument}>
-        <Text style={styles.input}>Select License Document</Text>
+
+      {selectedDocument.length > 3 && <Text style={styles.input}>{selectedDocument}</Text>}
+      {selectedDocument.length <= 3 && <Text style={styles.input}>Select License Document</Text>}
+
       </TouchableOpacity>
-      {selectedDocument && <Text>Selected Document: {selectedDocument}</Text>}
+
 
       {/* Date Picker for License Expiry Date */}
       <Text>Licence expiry date</Text>
@@ -66,22 +72,20 @@ const Section3 = ({ formData, setFormData }) => {
         onCancel={hideDatePicker}
       />
 
-      {/* Dropdown (Picker) for License Category using Expo Picker */}
       <Text>License Category:</Text>
       <Picker
-        selectedValue={formData && formData?.licenseCategory ? formData?.licenseCategory : ''}
+        selectedValue={formData && formData?.insuranceCategory ? formData?.insuranceCategory : ''}
         onValueChange={(itemValue) =>
           setFormData({
             ...(formData || {}),
-            licenseCategory: itemValue,
+            insuranceCategory: itemValue,
           })
         }
       >
         <Picker.Item label="Select Category" value="" />
-        <Picker.Item label="Third-Party" value="Third-Party" />
-        <Picker.Item label="Vehicle-Comprehensive" value="Vehicle-Comprehensive" />
+        <Picker.Item label="Third-Party" value="third-party insurance" />
+        <Picker.Item label="Vehicle-Comprehensive" value="vehicle-comprehensive insurance" />
         <Picker.Item label="Goods-in-Transit" value="Goods-in-Transit" />
-        {/* Add more items based on your options */}
       </Picker>
 
     </View>
