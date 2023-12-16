@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, Modal, TouchableOpacity, TextInput } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { useAuth } from '../auth';
-import { fetchTicketData } from '../utils/services';
+import { fetchTicketData} from '../utils/services';
 
 const QRCodeScanner = () => {
 
@@ -11,14 +11,112 @@ const QRCodeScanner = () => {
 
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
-  const [tk_id, setData] = useState("");
+
+  const [used, setUsed] = useState(0);
+  const [bought, setBought] = useState(0)
+  const [tk_date, setTripDate] = useState(null);
+  const [tk_id, setTicketID] = useState(0);
+  const [max, setMax] = useState(0);
+
+  const [to_use, setToUse] = useState(1);
+
+  const [ticket_modal, showTicketModal] = useState(false);
+
 
   useEffect(() => {
+
     (async () => {
+
       const { status } = await BarCodeScanner.requestPermissionsAsync();
       setHasPermission(status === 'granted');
+
     })();
+
   }, []);
+
+
+  useEffect(() => {
+
+    if(bought > 0){
+    
+        showTicketModal(true)
+
+    }
+
+  }, [bought]);
+
+  const handleCloseModal = () => {
+
+        showTicketModal(false)
+  }
+
+
+  const admit_ticket = async (tk_mn, max_m=0) => {
+
+       const formData = new FormData();
+
+        const matches = tk_mn.match(/\d+/);
+
+        const tk_mn_ = matches ? parseInt(matches[0], 10) : 0;
+
+
+       if(tk_mn_ > 0){
+
+        formData.append('tk_id', tk_mn_); //
+
+       }else{
+
+        return
+
+       }
+
+       let _max = max_m > 0 ? max_m : max
+
+        if(to_use > _max){
+
+          Alert.alert(`You cannot admit more than the ${_max} ticket(s) available`)
+          return;
+
+        }
+ 
+       
+       formData.append('tk_num', to_use); //
+  
+     
+       try{  
+         
+         const response = await fetch('https://urbanfleet.biz/includes/admit_ticket.php', {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'multipart/form-data',
+           },
+           body: formData,
+         });
+     
+              const responseText = await response.text(); 
+
+              console.log('Raw response:', responseText);
+          
+                const data = JSON.parse(responseText);
+
+                console.log('js response:', data)
+
+                if(data.success && data.success == true){
+                    
+                    Alert.alert('Done!', 'Your Ticket has been succesfully admitted.' )
+
+                    showTicketModal(false);
+                }
+ 
+       } catch (error) {
+          console.error('Error uploading image:', error);
+       }
+ 
+ 
+
+    
+};
+
 
 
   
@@ -26,13 +124,13 @@ const QRCodeScanner = () => {
 
       if(tk_id.length > 3){
            
-        console.log(tk_id);
+        //console.log(tk_id);
 
             fetchTicketData(user.user_id, tk_id).then((res) => {   
     
                 if(res){
 
-                    //console.log(res[0].msg, "jgjgj")
+                    console.log(res[0])
 
                     //return
                         
@@ -43,10 +141,48 @@ const QRCodeScanner = () => {
                                 res[0].msg
                             )
                         }else{
-                            Alert.alert (
-                                'TICKET INFO',
-                                `Date: ${res[0].start_date}\nTicket used: ${res[0].used} of ${res[0].bought}`
-                            )
+
+                          if(res[0].bought < 2 && res[0].used < 1 ){
+
+                                  Alert.alert(
+                                    'Ticket Info', 
+                                    `Trip Date: ${res[0].start_date} \nTicket Status: ${res[0].used} of ${res[0].bought} \n`,
+                            
+                                    [
+                                     
+                                      {
+                                        text: `Admit this Ticket`,
+                                        onPress: () => {
+                                            admit_ticket(res[0].tk_id, res[0].max)
+                                        },
+                                      },
+                                      
+                                    ],
+                                    { cancelable: true }
+                                  );
+
+
+                          }else if(( parseInt(res[0].bought) === parseInt(res[0].used) ) || parseInt(res[0].max) < 0){
+
+                            Alert.alert(
+
+                              'Ticket Info', 
+                              `Trip Date: ${res[0].start_date} \nTicket Status: USED \n`,
+                            );
+
+
+                    }else{
+
+                                setMax(res[0].max)
+                                setUsed(res[0].used)
+                                setBought(res[0].bought),
+                                setTripDate(res[0].start_date)
+                                setTicketID(res[0].tk_id)
+
+                          }
+
+                       
+
 
                         }
                 
@@ -79,7 +215,7 @@ const QRCodeScanner = () => {
             [{ text: 'OK', onPress: () => setScanned(false) }]
           );
 
-          setData(data)
+          setTicketID(data)
     }
 
   
@@ -107,6 +243,31 @@ const QRCodeScanner = () => {
             {scanned && (
                 <Text style={styles.scanText}>Scanned successfully! Tap to scan again.</Text>
             )}
+
+<Modal visible={ticket_modal} animationType="slide">
+
+<TouchableOpacity onPress={() => handleCloseModal()}  style={{marginTop: 45, padding: 12}}>
+    <Text>Save & Close</Text>
+  </TouchableOpacity>
+   
+   <View style={{marginHorizontal: 14, marginVertical: 14}}>
+      
+      <Text>Enter number of ticket to admit out of the available {max} ticket(s):</Text>
+      <TextInput style={{borderWidth:1, borderRadius:14, borderColor:'green', height:40, marginTop: 12 }}
+        value={to_use}
+        onChangeText={(text) => setToUse(text)}
+        placeholder="1"
+        keyboardType="numeric"
+      />
+
+     <TouchableOpacity onPress={() => admit_ticket(tk_id)}  style={{marginTop: 15, padding: 12, backgroundColor: 'green', borderRadius: 14, width: 120 }}>
+        <Text style={{color: 'white', fontWeight: 800}}>Admit Ticket</Text>
+      </TouchableOpacity>
+      
+   </View>
+
+</Modal>
+
     </View>
   );
 };

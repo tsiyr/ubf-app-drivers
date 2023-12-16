@@ -9,7 +9,7 @@ const UserProfile = () => {
 
     const { user, setUser } = useAuth();
 
-    console.log(user)
+    //console.log(user)
 
     const handleMyRentalsPress = () => {
 
@@ -29,7 +29,7 @@ const UserProfile = () => {
       };
     
       const handleDeleteAccountPress = () => {
-        
+
         console.log('Delete Account');
       };
 

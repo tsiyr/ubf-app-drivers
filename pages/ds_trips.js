@@ -48,6 +48,36 @@ const url="https://urbanfleet.biz/";
     
     
       }, []);
+
+
+
+      useEffect(() => {
+
+        if(!modalVisible){
+
+        fetchDSTrips(user.user_id).then((res) => {   
+    
+          if(res){
+
+
+            const total = res.reduce((sum, trip) => {
+             
+                return sum + trip.sold_num;
+              
+            }, 0);
+            
+            setTotalEarned(total);
+            setRentals(res)
+    
+          }
+    
+          
+        
+          });
+        }
+    
+    
+      }, [modalVisible]);
     
    
     const renderRentalItem = ({ item }) => (
